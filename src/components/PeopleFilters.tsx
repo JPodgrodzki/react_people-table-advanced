@@ -6,6 +6,15 @@ type Props = {
   setSearchParams: React.Dispatch<React.SetStateAction<URLSearchParams>>;
 };
 
+function clearCenturiesInSearch(searchParams: URLSearchParams) {
+  const newSearchParams = new URLSearchParams(searchParams.toString());
+
+  newSearchParams.delete('centuries');
+  const searchString = newSearchParams.toString();
+
+  return searchString ? `?${searchString}` : '';
+}
+
 function updateCenturiesInSearch(
   searchParams: URLSearchParams,
   century: string,
@@ -20,6 +29,20 @@ function updateCenturiesInSearch(
     filtered.forEach(c => newSearchParams.append('centuries', c));
   } else {
     newSearchParams.append('centuries', century);
+  }
+
+  const searchString = newSearchParams.toString();
+
+  return searchString ? `?${searchString}` : '';
+}
+
+function updateSexInSearch(searchParams: URLSearchParams, sex: string | null) {
+  const newSearchParams = new URLSearchParams(searchParams.toString());
+
+  if (sex === null) {
+    newSearchParams.delete('sex');
+  } else {
+    newSearchParams.set('sex', sex);
   }
 
   const searchString = newSearchParams.toString();
@@ -56,19 +79,27 @@ export const PeopleFilters: React.FC<Props> = ({
 
         <p className="panel-tabs" data-cy="SexFilter">
           <Link
-            to="/people"
-            className={!searchParams.get('sex') ? 'is-active' : ''}
+            to={{
+              pathname: '/people',
+              search: updateSexInSearch(searchParams, null),
+            }}
           >
             All
           </Link>
           <Link
-            to={{ pathname: '/people', search: '?sex=m' }}
+            to={{
+              pathname: '/people',
+              search: updateSexInSearch(searchParams, 'm'),
+            }}
             className={searchParams.get('sex') === 'm' ? 'is-active' : ''}
           >
             Male
           </Link>
           <Link
-            to={{ pathname: '/people', search: '?sex=f' }}
+            to={{
+              pathname: '/people',
+              search: updateSexInSearch(searchParams, 'f'),
+            }}
             className={searchParams.get('sex') === 'f' ? 'is-active' : ''}
           >
             Female
@@ -120,7 +151,10 @@ export const PeopleFilters: React.FC<Props> = ({
               <Link
                 data-cy="centuryALL"
                 className="button is-success is-outlined"
-                to="/people"
+                to={{
+                  pathname: '/people',
+                  search: clearCenturiesInSearch(searchParams),
+                }}
               >
                 All
               </Link>

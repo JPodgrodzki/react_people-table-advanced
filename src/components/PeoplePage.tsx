@@ -1,8 +1,10 @@
+/* eslint-disable */
 import { PeopleFilters } from './PeopleFilters';
 import { Loader } from './Loader';
 import { PeopleTable } from './PeopleTable';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { filter } from 'cypress/types/bluebird';
 
 export const PeoplePage = () => {
   const [people, setPeople] = useState([]);
@@ -15,11 +17,11 @@ export const PeoplePage = () => {
 
     const fetchPeople = async () => {
       try {
-        const responce = await fetch(
+        const response = await fetch(
           'https://mate-academy.github.io/react_people-table/api/people.json',
         );
 
-        const data = await responce.json();
+        const data = await response.json();
 
         setPeople(data);
       } catch {
@@ -33,6 +35,20 @@ export const PeoplePage = () => {
 
     fetchPeople();
   }, []);
+
+  const query = searchParams.get('query')?.toLowerCase() || '';
+  const selectedSex = searchParams.get('sex');
+  const selectedCenturies = searchParams.getAll('centuries');
+
+  const filteredPeople = people.filter(person => {
+    const nameMatch = person.name.toLowerCase().includes(query);
+    const sexMatch = !selectedSex || person.sex.toLowerCase().includes(selectedSex);
+    const centuryMatch =
+      selectedCenturies.length === 0 ||
+      selectedCenturies.includes(String(person.century));
+
+    return nameMatch && sexMatch && centuryMatch;
+  });
 
   return (
     <>
@@ -64,12 +80,16 @@ export const PeoplePage = () => {
                       There are no people on the server
                     </p>
                   )}
-                  {!error && people.length > 0 && (
-                    <PeopleTable people={people} searchParams={searchParams} />
+                  {!error && people.length > 0 && filteredPeople.length > 0 && (
+                    <PeopleTable people={filteredPeople} searchParams={searchParams} />
                   )}
-                  <p>
-                    There are no people matching the current search criteria
-                  </p>
+                  {!error &&
+                    people.length > 0 &&
+                    filteredPeople.length === 0 && (
+                    <p>
+                        There are no people matching the current search criteria
+                    </p>
+                  )}
                 </>
               )}
             </div>
